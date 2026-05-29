@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>별빛 투두룸 (My Star To-Do)</title>
+    <style>
+        /* 기본 스타일 초기화 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        }
+
+        body {
+            background-color: #fce4ec;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* 메신저 형태의 메인 모바일 창 */
+        .messenger-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 800px;
+            background-color: #ffd1dc; /* 첨부해주신 은은한 핑크색 바탕 */
+            /* 배경에 은은한 그레이 별 모양을 구현하기 위한 SVG 백그라운드 */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 4l2.5 7.5H40l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M0 34l2.5 7.5H10l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M60 34l2.5 7.5H70l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3C/svg%3E");
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        /* 메신저 상단 바 (헤더) */
+        .header {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(167, 167, 167, 0.2);
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            background-color: #b0bec5; /* 별 색상과 맞춘 그레이 프로필 */
+            border-radius: 40%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 22px;
+            margin-right: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .room-info {
+            flex: 1;
+        }
+
+        .room-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #5c5c5c;
+        }
+
+        .room-count {
+            font-size: 12px;
+            color: #8e8e8e;
+            margin-top: 2px;
+        }
+
+        /* 채팅창 / 할 일 목록 영역 */
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* 시간 안내 선 */
+        .date-divider {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .date-text {
+            background-color: rgba(0, 0, 0, 0.08);
+            color: #ffffff;
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        /* 할 일 메시지 박스 스타일 (상대방이 보낸 말풍선 형태) */
+        .todo-item {
+            display: flex;
+            align-items: flex-end;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .todo-bubble {
+            background-color: #ffffff;
+            color: #4a4a4a;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border-top-left-radius: 2px;
+            font-size: 14.5px;
+            line-height: 1.4;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        /* 완료된 할 일 스타일 */
+        .todo-item.completed .todo-bubble {
+            background-color: rgba(255, 255, 255, 0.5);
+            color: #a0a0a0;
+            text-decoration: line-through;
+        }
+
+        /* 말풍선 옆 시간/체크 표시 */
+        .todo-meta {
+            font-size: 10px;
+            color: #7a7a7a;
+            margin-left: 6px;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+
+        .todo-item.completed .todo-meta::before {
+            content: '✓ ';
+            color: #a7a7a7;
+            font-weight: bold;
+        }
+
+        /* 삭제 버튼 (말풍선 우측 상단 호버 시 노출) */
+        .delete-btn {
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #e57373;
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        /* 하단 입력창 영역 */
+        .input-area {
+            background-color: #ffffff;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid rgba(167, 167, 167, 0.1);
+        }
+
+        .todo-input {
+            flex: 1;
+            height: 40px;
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 20px;
+            padding: 0 20px;
+            font-size: 14px;
+            outline: none;
+            color: #4a4a4a;
+        }
+
+        .todo-input::placeholder {
+            color: #bbb;
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #a7a7a7; /* 사진 속 별의 그레이 톤 */
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: #8e8e8e;
+        }
+
+        /* 스크롤바 커스텀 */
+        .chat-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="messenger-container">
+        <div class="header">
+            <div class="profile-img">★</div>
+            <div class="room-info">
+                <div class="room-title">오늘의 별빛 할 일</div>
+                <div class="room-count" id="todo-count">남은 할 일: 0개</div>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chat-area">
+            <div class="date-divider">
+                <span class="date-text" id="current-date">2026년 05월 29일</span>
+            </div>
+            </div>
+
+        <div class="input-area">
+            <input type="text" class="todo-input" id="todo-input" placeholder="할 일을 입력하고 전송을 눌러주세요..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="addTodo()">★</button>
+        </div>
+    </div>
+
+    <script>
+        // 오늘 날짜 표시 기능
+        const dateText = document.getElementById('current-date');
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
+        dateText.innerText = now.toLocaleDateString('ko-KR', options);
+
+        // 할 일 추가 함수
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            const chatArea = document.getElementById('chat-area');
+            const text = input.value.trim();
+
+            if (text === '') return;
+
+            // 현재 시간 구하기 (오후 2:05 형식)
+            const timeString = new Date().toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            // 투두 아이템 엘리먼트 생성
+            const todoItem = document.createElement('div');
+            todoItem.classList.add('todo-item');
+
+            todoItem.innerHTML = `
+                <div class="todo-bubble" onclick="toggleComplete(this)">
+                    ${text}
+                    <button class="delete-btn" onclick="deleteTodo(event, this)">×</button>
+                </div>
+                <div class="todo-meta">${timeString}</div>
+            `;
+
+            chatArea.appendChild(todoItem);
+            input.value = ''; // 입력창 초기화
+            
+            // 새 메시지 추가 시 자동 스크롤 하단 이동
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            updateCount();
+        }
+
+        // 엔터키 입력 처리
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addTodo();
+            }
+        }
+
+        // 할 일 완료 토글 (말풍선 클릭 시 리치하게 변경)
+        function toggleComplete(bubbleElement) {
+            const item = bubbleElement.parentElement;
+            item.classList.toggle('completed');
+            updateCount();
+        }
+
+        // 할 일 삭제 (× 버튼 클릭 시)
+        function deleteTodo(event, buttonElement) {
+            event.stopPropagation(); // 말풍선 클릭 이벤트 전파 방지
+            const item = buttonElement.parentElement.parentElement;
+            item.style.opacity = '0';
+            setTimeout(() => {
+                item.remove();
+                updateCount();
+            }, 200);
+        }
+
+        // 남은 할 일 개수 업데이트
+        function updateCount() {
+            const totalItems = document.querySelectorAll('.todo-item').length;
+            const completedItems = document.querySelectorAll('.todo-item.completed').length;
+            const remaining = totalItems - completedItems;
+            
+            document.getElementById('todo-count').innerText = `남은 할 일: ${remaining}개`;
+        }
+    </script>
+</body>
+</html>
