@@ -29,8 +29,9 @@
             max-height: 800px;
             background-color: #ffd1dc; /* 은은한 핑크색 바탕 */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 4l2.5 7.5H40l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M0 34l2.5 7.5H10l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M60 34l2.5 7.5H70l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3C/svg%3E");
+            background-repeat: repeat;
             display: flex;
-            flex-direction: row; /* 인덱스 바를 옆에 두기 위해 row로 변경 */
+            flex-direction: row; 
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             border-radius: 20px;
             overflow: hidden;
@@ -133,19 +134,20 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            display: none; /* 기본적으로 숨김 */
+            display: none; 
             flex-direction: column;
             gap: 15px;
         }
 
         .content-panel.active {
-            display: flex; /* 활성화된 패널만 노출 */
+            display: flex; 
         }
 
         /* 시간 안내 선 */
         .date-divider {
             text-align: center;
             margin: 10px 0;
+            width: 100%;
         }
 
         .date-text {
@@ -157,19 +159,21 @@
             display: inline-block;
         }
 
-        /* 메시지 상자 공통 스타일 */
+        /* 메시지 상자 공통 스타일 (구조적 버그 수정) */
         .msg-item {
             display: flex;
             align-items: flex-end;
-            max-width: 85%;
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 5px;
             animation: fadeIn 0.3s ease;
             position: relative;
+            justify-content: flex-start; /* 기본은 상대방 창 (왼쪽 정렬) */
         }
 
-        /* 내가 보낸 메시지 스타일 (Talk에서 사용) */
+        /* 내가 보낸 메시지 스타일 (우측 정렬 및 찌그러짐 현상 해결) */
         .msg-item.my-msg {
-            align-self: flex-end;
-            max-width: 85%;
+            justify-content: flex-end; /* 내 메시지는 오른쪽 정렬 */
         }
 
         .msg-item.my-msg .msg-bubble {
@@ -185,6 +189,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 말풍선 본체 스타일 (너비 복구 및 최대 한도 확보) */
         .msg-bubble {
             background-color: #ffffff;
             color: #4a4a4a;
@@ -198,6 +203,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            max-width: 75%; /* 말풍선이 화면을 너무 꽉 채우지 않도록 가독성 확보 */
+            word-break: break-all; /* 긴 텍스트 자동 줄바꿈 */
         }
 
         /* 하트 비활성/활성 스타일 */
@@ -206,7 +213,7 @@
             border: none;
             cursor: pointer;
             font-size: 16px;
-            color: #b0bec5; /* 기본 빈 하트 색상 (그레이) */
+            color: #b0bec5; 
             transition: transform 0.2s;
             padding: 0;
         }
@@ -221,10 +228,10 @@
             text-decoration: line-through;
         }
         .msg-item.completed .heart-btn {
-            color: #ff6b8b; /* 채워진 하트 색상 (분홍색) */
+            color: #ff6b8b; 
         }
 
-        /* 메타 정보 (시간) */
+        /* 메타 정보 (시간 배치 최적화) */
         .msg-meta {
             font-size: 10px;
             color: #7a7a7a;
@@ -459,7 +466,7 @@
                 <div class="date-divider">
                     <span class="date-text" id="current-date">2026년 05월 29일</span>
                 </div>
-                <div id="todo-list-container"></div>
+                <div id="todo-list-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
 
             <div class="content-panel" id="panel-memo" style="padding: 15px;">
@@ -470,7 +477,7 @@
                 <div class="date-divider">
                     <span class="date-text">심심할 때 대화를 걸어보세요!</span>
                 </div>
-                <div id="talk-list-container"></div>
+                <div id="talk-list-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
 
             <div class="content-panel" id="panel-settings" style="padding: 20px;">
@@ -500,7 +507,7 @@
             if (savedNickname) {
                 nickname = savedNickname;
                 document.getElementById('room-title').innerText = `${nickname}의 to do list`;
-                document.getElementById('edit-nickname-input').value = nickname; // 설정 창에도 미리 닉네임 채워두기
+                document.getElementById('edit-nickname-input').value = nickname; 
                 document.getElementById('login-overlay').style.display = 'none';
             }
 
@@ -535,11 +542,11 @@
             
             localStorage.setItem('wt_nickname', nickname);
             document.getElementById('room-title').innerText = `${nickname}의 to do list`;
-            document.getElementById('edit-nickname-input').value = nickname; // 세팅란 연동
+            document.getElementById('edit-nickname-input').value = nickname; 
             document.getElementById('login-overlay').style.display = 'none';
         }
 
-        // 언제든지 설정 탭에서 새로운 닉네임으로 교체하는 기능
+        // 닉네임 수정 기능
         function updateNickname() {
             const editInput = document.getElementById('edit-nickname-input');
             const newName = editInput.value.trim();
@@ -550,11 +557,10 @@
             }
 
             nickname = newName;
-            localStorage.setItem('wt_nickname', nickname); // 보관함 갱신
-            document.getElementById('room-title').innerText = `${nickname}의 to do list`; // 상단 헤더 갱신
+            localStorage.setItem('wt_nickname', nickname); 
+            document.getElementById('room-title').innerText = `${nickname}의 to do list`; 
             alert('닉네임이 성공적으로 변경되었습니다! ✨');
             
-            // 변경 후 자연스럽게 투두 탭으로 복귀 처리
             switchTab('todo', document.querySelectorAll('.index-btn')[0]);
         }
 
@@ -583,7 +589,6 @@
             const inputArea = document.getElementById('input-area');
             const inputField = document.getElementById('todo-input');
             
-            // 메모나 설정 탭에서는 하단 채팅 입력바가 필요 없으므로 숨김
             if (tabName === 'memo' || tabName === 'settings') {
                 inputArea.style.display = 'none';
             } else {
@@ -591,7 +596,7 @@
                 if (tabName === 'todo') {
                     inputField.placeholder = "할 일을 입력하고 전송을 눌러주세요";
                 } else if (tabName === 'talk') {
-                    inputField.placeholder = "기다리는 중...";
+                    inputField.placeholder = "심심할 때 말을 걸어보세요!";
                 }
             }
         }
