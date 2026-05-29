@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> whatodo? </title>
+    <title>whatodo?</title>
     <style>
         /* 기본 스타일 초기화 */
         * {
@@ -37,7 +37,7 @@
             position: relative;
         }
 
-        /* [추가] 왼쪽 세로 인덱스 바 (메뉴) */
+        /* 왼쪽 세로 인덱스 바 (메뉴) */
         .index-sidebar {
             width: 65px;
             background-color: rgba(255, 255, 255, 0.6);
@@ -200,7 +200,7 @@
             gap: 8px;
         }
 
-        /* [변경] 하트 비활성/활성 스타일 */
+        /* 하트 비활성/활성 스타일 */
         .heart-btn {
             background: none;
             border: none;
@@ -251,7 +251,7 @@
             opacity: 1;
         }
 
-        /* [추가] 메모장 스타일 컴포넌트 */
+        /* 메모장 스타일 컴포넌트 */
         .memo-textarea {
             width: 100%;
             height: 100%;
@@ -308,7 +308,7 @@
             background-color: #8e8e8e;
         }
 
-        /* [추가] 닉네임 입력 모달 팝업 창 */
+        /* 닉네임 입력 모달 팝업 창 */
         .login-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -331,10 +331,11 @@
         }
 
         .login-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #5c5c5c;
             margin-bottom: 8px;
+            letter-spacing: 1px;
         }
 
         .login-subtitle {
@@ -378,7 +379,7 @@
         
         <div class="login-overlay" id="login-overlay">
             <div class="login-box">
-                <div class="login-title">★ 별빛 방 방문을 환영합니다 ★</div>
+                <div class="login-title">★ WHATODO? ★</div>
                 <div class="login-subtitle">사용하실 닉네임을 입력해 주세요.</div>
                 <input type="text" class="login-input" id="nickname-input" placeholder="닉네임 입력..." onkeypress="if(event.key==='Enter') startApp()">
                 <button class="login-btn" onclick="startApp()">들어가기</button>
@@ -410,7 +411,7 @@
                 <div class="date-divider">
                     <span class="date-text" id="current-date">2026년 05월 29일</span>
                 </div>
-                </div>
+            </div>
 
             <div class="content-panel" id="panel-memo" style="padding: 15px;">
                 <textarea class="memo-textarea" placeholder="여기에 자유롭게 메모를 남겨보세요... (자동으로 저장되지 않으니 참고해 주세요!)"></textarea>
@@ -420,7 +421,7 @@
                 <div class="date-divider">
                     <span class="date-text">심심할 때 대화해요</span>
                 </div>
-                </div>
+            </div>
 
             <div class="input-area" id="input-area">
                 <input type="text" class="todo-input" id="todo-input" placeholder="할 일을 입력하고 전송을 눌러주세요..." onkeypress="handleKeyPress(event)">
@@ -433,7 +434,7 @@
         let currentTab = 'todo';
         let nickname = '';
 
-        // [4번 구현] 닉네임 입력 완료 후 앱 시작
+        // 닉네임 입력 완료 후 앱 시작
         function startApp() {
             const nickInput = document.getElementById('nickname-input');
             nickname = nickInput.value.trim();
@@ -454,7 +455,7 @@
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
         dateText.innerText = now.toLocaleDateString('ko-KR', options);
 
-        // [2번 구현] 탭 전환 함수
+        // 탭 전환 함수
         function switchTab(tabName, button) {
             currentTab = tabName;
             
@@ -471,7 +472,7 @@
             const inputField = document.getElementById('todo-input');
             
             if (tabName === 'memo') {
-                inputArea.style.display = 'none'; // 메모 탭에선 입력 바 숨김
+                inputArea.style.display = 'none';
             } else {
                 inputArea.style.display = 'flex';
                 if (tabName === 'todo') {
@@ -482,7 +483,7 @@
             }
         }
 
-        // 전송 버튼 클릭 공통 처리 (투두 생성 또는 챗봇 대화)
+        // 전송 버튼 클릭 공통 처리
         function handleSend() {
             if (currentTab === 'todo') {
                 addTodo();
@@ -505,7 +506,7 @@
             });
         }
 
-        // [1번 구현] To-Do 추가 기능 (하트 기호 탑재)
+        // To-Do 추가 기능 (하트 기호 탑재)
         function addTodo() {
             const input = document.getElementById('todo-input');
             const panel = document.getElementById('panel-todo');
@@ -516,7 +517,6 @@
             const todoItem = document.createElement('div');
             todoItem.classList.add('msg-item');
 
-            // 구조 변경: 클릭 가능한 하트 아이콘(♡)을 텍스트 왼쪽에 배치
             todoItem.innerHTML = `
                 <div class="msg-bubble">
                     <button class="heart-btn" onclick="toggleHeart(this)">♡</button>
@@ -532,20 +532,20 @@
             updateCount();
         }
 
-        // [1번 구현] 하트 클릭 시 토글 기능
+        // 하트 클릭 시 토글 기능
         function toggleHeart(btnElement) {
             const item = btnElement.closest('.msg-item');
             item.classList.toggle('completed');
             
             if(item.classList.contains('completed')) {
-                btnElement.innerText = '♥'; // 누르면 꽉 찬 하트로
+                btnElement.innerText = '♥';
             } else {
-                btnElement.innerText = '♡'; // 취소하면 빈 하트로
+                btnElement.innerText = '♡';
             }
             updateCount();
         }
 
-        // [3번 구현] Talk 메시지 전송 및 랜덤 답변 출력
+        // Talk 메시지 전송 및 랜덤 답변 출력
         function sendTalkMessage() {
             const input = document.getElementById('todo-input');
             const panel = document.getElementById('panel-talk');
@@ -564,12 +564,19 @@
             input.value = '';
             panel.scrollTop = panel.scrollHeight;
 
-            // 2. 챗봇의 랜덤 답변 생성 (약간의 딜레이를 줘서 실제 대화 느낌 구현)
+            // 2. 챗봇의 랜덤 답변 생성
             setTimeout(() => {
                 const replies = [
                     '자외선 차단제 바르는 거 잊지 마!',
                     '나 그냥 있오..',
                     '머해??',
+                    '보고 시퍼',
+                    '힘 내!! 아자아자',
+                    '무리하지 마..',
+                    '잘 지내!',
+                    '아프지 마',
+                    '큼....',
+                    '그러쿠나',
                     '잘 잤어?',
                     '푹 잘 잤으면 좋겠어'
                 ];
@@ -586,7 +593,7 @@
             }, 500);
         }
 
-        // 리스트 아이템 삭제 (투두 전용)
+        // 리스트 아이템 삭제
         function deleteItem(event, buttonElement) {
             event.stopPropagation();
             const item = buttonElement.closest('.msg-item');
