@@ -27,13 +27,64 @@
             max-width: 420px;
             height: 100vh;
             max-height: 800px;
-            background-color: #ffd1dc; /* 첨부해주신 은은한 핑크색 바탕 */
-            /* 배경에 은은한 그레이 별 모양을 구현하기 위한 SVG 백그라운드 */
+            background-color: #ffd1dc; /* 은은한 핑크색 바탕 */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 4l2.5 7.5H40l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M0 34l2.5 7.5H10l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M60 34l2.5 7.5H70l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3C/svg%3E");
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* 인덱스 바를 옆에 두기 위해 row로 변경 */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* [추가] 왼쪽 세로 인덱스 바 (메뉴) */
+        .index-sidebar {
+            width: 65px;
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(5px);
+            border-right: 1px solid rgba(167, 167, 167, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .index-btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            background: none;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #7a7a7a;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .index-btn .icon {
+            font-size: 18px;
+        }
+
+        .index-btn.active {
+            background-color: #ffffff;
+            color: #ff8da1;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* 오른쪽 메인 콘텐츠 영역 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             overflow: hidden;
         }
 
@@ -50,7 +101,7 @@
         .profile-img {
             width: 45px;
             height: 45px;
-            background-color: #b0bec5; /* 별 색상과 맞춘 그레이 프로필 */
+            background-color: #b0bec5;
             border-radius: 40%;
             display: flex;
             justify-content: center;
@@ -66,7 +117,7 @@
         }
 
         .room-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             color: #5c5c5c;
         }
@@ -77,14 +128,18 @@
             margin-top: 2px;
         }
 
-        /* 채팅창 / 할 일 목록 영역 */
-        .chat-area {
+        /* 대화창 / 내용 분리 영역 */
+        .content-panel {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            display: flex;
+            display: none; /* 기본적으로 숨김 */
             flex-direction: column;
             gap: 15px;
+        }
+
+        .content-panel.active {
+            display: flex; /* 활성화된 패널만 노출 */
         }
 
         /* 시간 안내 선 */
@@ -102,12 +157,27 @@
             display: inline-block;
         }
 
-        /* 할 일 메시지 박스 스타일 (상대방이 보낸 말풍선 형태) */
-        .todo-item {
+        /* 메시지 상자 공통 스타일 */
+        .msg-item {
             display: flex;
             align-items: flex-end;
             max-width: 85%;
             animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+
+        /* 내가 보낸 메시지 스타일 (Talk에서 사용) */
+        .msg-item.my-msg {
+            align-self: flex-end;
+            max-width: 85%;
+        }
+
+        .msg-item.my-msg .msg-bubble {
+            background-color: #ffb1c1;
+            color: #ffffff;
+            border-radius: 16px;
+            border-top-right-radius: 2px;
+            border-top-left-radius: 16px;
         }
 
         @keyframes fadeIn {
@@ -115,7 +185,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .todo-bubble {
+        .msg-bubble {
             background-color: #ffffff;
             color: #4a4a4a;
             padding: 12px 16px;
@@ -124,34 +194,45 @@
             font-size: 14.5px;
             line-height: 1.4;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            cursor: pointer;
-            transition: all 0.2s ease;
             position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* 완료된 할 일 스타일 */
-        .todo-item.completed .todo-bubble {
+        /* [변경] 하트 비활성/활성 스타일 */
+        .heart-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #b0bec5; /* 기본 빈 하트 색상 (그레이) */
+            transition: transform 0.2s;
+            padding: 0;
+        }
+        .heart-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* 투두 완료 상태 스타일 */
+        .msg-item.completed .msg-bubble {
             background-color: rgba(255, 255, 255, 0.5);
             color: #a0a0a0;
             text-decoration: line-through;
         }
+        .msg-item.completed .heart-btn {
+            color: #ff6b8b; /* 채워진 하트 색상 (분홍색) */
+        }
 
-        /* 말풍선 옆 시간/체크 표시 */
-        .todo-meta {
+        /* 메타 정보 (시간) */
+        .msg-meta {
             font-size: 10px;
             color: #7a7a7a;
-            margin-left: 6px;
+            margin: 0 6px 2px 6px;
             white-space: nowrap;
-            margin-bottom: 2px;
         }
 
-        .todo-item.completed .todo-meta::before {
-            content: '✓ ';
-            color: #a7a7a7;
-            font-weight: bold;
-        }
-
-        /* 삭제 버튼 (말풍선 우측 상단 호버 시 노출) */
+        /* 삭제 버튼 */
         .delete-btn {
             position: absolute;
             right: -25px;
@@ -166,8 +247,24 @@
             transition: opacity 0.2s;
         }
 
-        .todo-item:hover .delete-btn {
+        .msg-item:hover .delete-btn {
             opacity: 1;
+        }
+
+        /* [추가] 메모장 스타일 컴포넌트 */
+        .memo-textarea {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 15px;
+            color: #4a4a4a;
+            resize: none;
+            outline: none;
+            line-height: 1.6;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
         }
 
         /* 하단 입력창 영역 */
@@ -192,14 +289,10 @@
             color: #4a4a4a;
         }
 
-        .todo-input::placeholder {
-            color: #bbb;
-        }
-
         .send-btn {
             width: 40px;
             height: 40px;
-            background-color: #a7a7a7; /* 사진 속 별의 그레이 톤 */
+            background-color: #a7a7a7;
             border: none;
             border-radius: 50%;
             color: white;
@@ -215,100 +308,288 @@
             background-color: #8e8e8e;
         }
 
+        /* [추가] 닉네임 입력 모달 팝업 창 */
+        .login-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffd1dc;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+        }
+
+        .login-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #5c5c5c;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: #a7a7a7;
+            margin-bottom: 20px;
+        }
+
+        .login-input {
+            width: 100%;
+            height: 45px;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            padding: 0 20px;
+            font-size: 14px;
+            outline: none;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 45px;
+            background-color: #ff8da1;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         /* 스크롤바 커스텀 */
-        .chat-area::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-area::-webkit-scrollbar-thumb {
-            background-color: rgba(0,0,0,0.1);
-            border-radius: 10px;
-        }
+        .content-panel::-webkit-scrollbar { width: 4px; }
+        .content-panel::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 10px; }
     </style>
 </head>
 <body>
 
     <div class="messenger-container">
-        <div class="header">
-            <div class="profile-img">★</div>
-            <div class="room-info">
-                <div class="room-title">오늘의 별빛 할 일</div>
-                <div class="room-count" id="todo-count">남은 할 일: 0개</div>
+        
+        <div class="login-overlay" id="login-overlay">
+            <div class="login-box">
+                <div class="login-title">★ 별빛 방 방문을 환영합니다 ★</div>
+                <div class="login-subtitle">사용하실 닉네임을 입력해 주세요.</div>
+                <input type="text" class="login-input" id="nickname-input" placeholder="닉네임 입력..." onkeypress="if(event.key==='Enter') startApp()">
+                <button class="login-btn" onclick="startApp()">들어가기</button>
             </div>
         </div>
 
-        <div class="chat-area" id="chat-area">
-            <div class="date-divider">
-                <span class="date-text" id="current-date">2026년 05월 29일</span>
-            </div>
+        <div class="index-sidebar">
+            <button class="index-btn active" onclick="switchTab('todo', this)">
+                <span class="icon">✓</span><span>To Do</span>
+            </button>
+            <button class="index-btn" onclick="switchTab('memo', this)">
+                <span class="icon">📝</span><span>Memo</span>
+            </button>
+            <button class="index-btn" onclick="switchTab('talk', this)">
+                <span class="icon">💬</span><span>Talk</span>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <div class="profile-img">★</div>
+                <div class="room-info">
+                    <div class="room-title" id="room-title">To Do List</div>
+                    <div class="room-count" id="todo-count">남은 할 일: 0개</div>
+                </div>
             </div>
 
-        <div class="input-area">
-            <input type="text" class="todo-input" id="todo-input" placeholder="할 일을 입력하고 전송을 눌러주세요..." onkeypress="handleKeyPress(event)">
-            <button class="send-btn" onclick="addTodo()">★</button>
+            <div class="content-panel active" id="panel-todo">
+                <div class="date-divider">
+                    <span class="date-text" id="current-date">2026년 05월 29일</span>
+                </div>
+                </div>
+
+            <div class="content-panel" id="panel-memo" style="padding: 15px;">
+                <textarea class="memo-textarea" placeholder="여기에 자유롭게 메모를 남겨보세요... (자동으로 저장되지 않으니 참고해 주세요!)"></textarea>
+            </div>
+
+            <div class="content-panel" id="panel-talk">
+                <div class="date-divider">
+                    <span class="date-text">심심할 때 대화해요</span>
+                </div>
+                </div>
+
+            <div class="input-area" id="input-area">
+                <input type="text" class="todo-input" id="todo-input" placeholder="할 일을 입력하고 전송을 눌러주세요..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" id="send-btn" onclick="handleSend()">★</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // 오늘 날짜 표시 기능
+        let currentTab = 'todo';
+        let nickname = '';
+
+        // [4번 구현] 닉네임 입력 완료 후 앱 시작
+        function startApp() {
+            const nickInput = document.getElementById('nickname-input');
+            nickname = nickInput.value.trim();
+            if(nickname === '') {
+                alert('닉네임을 입력해 주세요!');
+                return;
+            }
+            
+            // 헤더 제목 변경
+            document.getElementById('room-title').innerText = `${nickname}의 to do list`;
+            // 모달창 숨기기
+            document.getElementById('login-overlay').style.display = 'none';
+        }
+
+        // 오늘 날짜 표시
         const dateText = document.getElementById('current-date');
         const now = new Date();
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
         dateText.innerText = now.toLocaleDateString('ko-KR', options);
 
-        // 할 일 추가 함수
-        function addTodo() {
-            const input = document.getElementById('todo-input');
-            const chatArea = document.getElementById('chat-area');
-            const text = input.value.trim();
-
-            if (text === '') return;
-
-            // 현재 시간 구하기 (오후 2:05 형식)
-            const timeString = new Date().toLocaleTimeString('ko-KR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            });
-
-            // 투두 아이템 엘리먼트 생성
-            const todoItem = document.createElement('div');
-            todoItem.classList.add('todo-item');
-
-            todoItem.innerHTML = `
-                <div class="todo-bubble" onclick="toggleComplete(this)">
-                    ${text}
-                    <button class="delete-btn" onclick="deleteTodo(event, this)">×</button>
-                </div>
-                <div class="todo-meta">${timeString}</div>
-            `;
-
-            chatArea.appendChild(todoItem);
-            input.value = ''; // 입력창 초기화
+        // [2번 구현] 탭 전환 함수
+        function switchTab(tabName, button) {
+            currentTab = tabName;
             
-            // 새 메시지 추가 시 자동 스크롤 하단 이동
-            chatArea.scrollTop = chatArea.scrollHeight;
+            // 모든 버튼 비활성화 및 클릭된 버튼 활성화
+            document.querySelectorAll('.index-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
 
-            updateCount();
+            // 모든 패널 숨기고 해당 패널 노출
+            document.querySelectorAll('.content-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`panel-${tabName}`).classList.add('active');
+
+            // 탭 상태에 따라 하단 입력창 플레이스홀더 및 구성 변경
+            const inputArea = document.getElementById('input-area');
+            const inputField = document.getElementById('todo-input');
+            
+            if (tabName === 'memo') {
+                inputArea.style.display = 'none'; // 메모 탭에선 입력 바 숨김
+            } else {
+                inputArea.style.display = 'flex';
+                if (tabName === 'todo') {
+                    inputField.placeholder = "할 일을 입력하고 전송을 눌러주세요...";
+                } else if (tabName === 'talk') {
+                    inputField.placeholder = "말을 걸어보세요...";
+                }
+            }
+        }
+
+        // 전송 버튼 클릭 공통 처리 (투두 생성 또는 챗봇 대화)
+        function handleSend() {
+            if (currentTab === 'todo') {
+                addTodo();
+            } else if (currentTab === 'talk') {
+                sendTalkMessage();
+            }
         }
 
         // 엔터키 입력 처리
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
-                addTodo();
+                handleSend();
             }
         }
 
-        // 할 일 완료 토글 (말풍선 클릭 시 리치하게 변경)
-        function toggleComplete(bubbleElement) {
-            const item = bubbleElement.parentElement;
-            item.classList.toggle('completed');
+        // 현재 시간 반환 유틸함수
+        function getTimeString() {
+            return new Date().toLocaleTimeString('ko-KR', {
+                hour: '2-digit', minute: '2-digit', hour12: true
+            });
+        }
+
+        // [1번 구현] To-Do 추가 기능 (하트 기호 탑재)
+        function addTodo() {
+            const input = document.getElementById('todo-input');
+            const panel = document.getElementById('panel-todo');
+            const text = input.value.trim();
+
+            if (text === '') return;
+
+            const todoItem = document.createElement('div');
+            todoItem.classList.add('msg-item');
+
+            // 구조 변경: 클릭 가능한 하트 아이콘(♡)을 텍스트 왼쪽에 배치
+            todoItem.innerHTML = `
+                <div class="msg-bubble">
+                    <button class="heart-btn" onclick="toggleHeart(this)">♡</button>
+                    <span class="todo-text">${text}</span>
+                    <button class="delete-btn" onclick="deleteItem(event, this)">×</button>
+                </div>
+                <div class="msg-meta">${getTimeString()}</div>
+            `;
+
+            panel.appendChild(todoItem);
+            input.value = '';
+            panel.scrollTop = panel.scrollHeight;
             updateCount();
         }
 
-        // 할 일 삭제 (× 버튼 클릭 시)
-        function deleteTodo(event, buttonElement) {
-            event.stopPropagation(); // 말풍선 클릭 이벤트 전파 방지
-            const item = buttonElement.parentElement.parentElement;
+        // [1번 구현] 하트 클릭 시 토글 기능
+        function toggleHeart(btnElement) {
+            const item = btnElement.closest('.msg-item');
+            item.classList.toggle('completed');
+            
+            if(item.classList.contains('completed')) {
+                btnElement.innerText = '♥'; // 누르면 꽉 찬 하트로
+            } else {
+                btnElement.innerText = '♡'; // 취소하면 빈 하트로
+            }
+            updateCount();
+        }
+
+        // [3번 구현] Talk 메시지 전송 및 랜덤 답변 출력
+        function sendTalkMessage() {
+            const input = document.getElementById('todo-input');
+            const panel = document.getElementById('panel-talk');
+            const text = input.value.trim();
+
+            if (text === '') return;
+
+            // 1. 내가 보낸 메시지 화면에 추가
+            const myItem = document.createElement('div');
+            myItem.classList.add('msg-item', 'my-msg');
+            myItem.innerHTML = `
+                <div class="msg-meta">${getTimeString()}</div>
+                <div class="msg-bubble">${text}</div>
+            `;
+            panel.appendChild(myItem);
+            input.value = '';
+            panel.scrollTop = panel.scrollHeight;
+
+            // 2. 챗봇의 랜덤 답변 생성 (약간의 딜레이를 줘서 실제 대화 느낌 구현)
+            setTimeout(() => {
+                const replies = [
+                    '자외선 차단제 바르는 거 잊지 마!',
+                    '나 그냥 있오..',
+                    '머해??',
+                    '잘 잤어?',
+                    '푹 잘 잤으면 좋겠어'
+                ];
+                const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+                const botItem = document.createElement('div');
+                botItem.classList.add('msg-item');
+                botItem.innerHTML = `
+                    <div class="msg-bubble">${randomReply}</div>
+                    <div class="msg-meta">${getTimeString()}</div>
+                `;
+                panel.appendChild(botItem);
+                panel.scrollTop = panel.scrollHeight;
+            }, 500);
+        }
+
+        // 리스트 아이템 삭제 (투두 전용)
+        function deleteItem(event, buttonElement) {
+            event.stopPropagation();
+            const item = buttonElement.closest('.msg-item');
             item.style.opacity = '0';
             setTimeout(() => {
                 item.remove();
@@ -318,8 +599,8 @@
 
         // 남은 할 일 개수 업데이트
         function updateCount() {
-            const totalItems = document.querySelectorAll('.todo-item').length;
-            const completedItems = document.querySelectorAll('.todo-item.completed').length;
+            const totalItems = document.querySelectorAll('#panel-todo .msg-item').length;
+            const completedItems = document.querySelectorAll('#panel-todo .msg-item.completed').length;
             const remaining = totalItems - completedItems;
             
             document.getElementById('todo-count').innerText = `남은 할 일: ${remaining}개`;
