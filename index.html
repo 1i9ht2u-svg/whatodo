@@ -27,7 +27,7 @@
             max-width: 420px;
             height: 100vh;
             max-height: 800px;
-            background-color: #ffd1dc; /* 은은한 핑크색 바탕 */
+            background-color: #ffd1dc; 
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 4l2.5 7.5H40l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M0 34l2.5 7.5H10l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3Cpath d='M60 34l2.5 7.5H70l-6 4.5 2.5 7.5-6.5-4.5-6.5 4.5 2.5-7.5-6-4.5h7.5z' fill='%23a7a7a7' fill-opacity='0.25'/%3E%3C/svg%3E");
             background-repeat: repeat;
             display: flex;
@@ -97,6 +97,12 @@
             display: flex;
             align-items: center;
             border-bottom: 1px solid rgba(167, 167, 167, 0.2);
+            justify-content: space-between; /* 우측 새로고침 버튼 배치를 위해 추가 */
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
         }
 
         .profile-img {
@@ -129,6 +135,27 @@
             margin-top: 2px;
         }
 
+        /* 🔄 상단 우측 새로고침 버튼 스타일 */
+        .reset-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #8e8e8e;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .reset-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: #ff8da1;
+            transform: rotate(180deg); /* 호버 시 회전 애니메이션 효과 */
+        }
+
         /* 대화창 / 내용 분리 영역 */
         .content-panel {
             flex: 1;
@@ -159,7 +186,7 @@
             display: inline-block;
         }
 
-        /* 메시지 상자 공통 스타일 (구조적 버그 수정) */
+        /* 메시지 상자 공통 스타일 */
         .msg-item {
             display: flex;
             align-items: flex-end;
@@ -168,12 +195,12 @@
             margin-bottom: 5px;
             animation: fadeIn 0.3s ease;
             position: relative;
-            justify-content: flex-start; /* 기본은 상대방 창 (왼쪽 정렬) */
+            justify-content: flex-start;
         }
 
-        /* 내가 보낸 메시지 스타일 (우측 정렬 및 찌그러짐 현상 해결) */
+        /* 내가 보낸 메시지 스타일 */
         .msg-item.my-msg {
-            justify-content: flex-end; /* 내 메시지는 오른쪽 정렬 */
+            justify-content: flex-end;
         }
 
         .msg-item.my-msg .msg-bubble {
@@ -189,7 +216,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 말풍선 본체 스타일 (너비 복구 및 최대 한도 확보) */
+        /* 말풍선 본체 스타일 */
         .msg-bubble {
             background-color: #ffffff;
             color: #4a4a4a;
@@ -203,8 +230,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            max-width: 75%; /* 말풍선이 화면을 너무 꽉 채우지 않도록 가독성 확보 */
-            word-break: break-all; /* 긴 텍스트 자동 줄바꿈 */
+            max-width: 75%;
+            word-break: break-all;
         }
 
         /* 하트 비활성/활성 스타일 */
@@ -231,7 +258,7 @@
             color: #ff6b8b; 
         }
 
-        /* 메타 정보 (시간 배치 최적화) */
+        /* 메타 정보 */
         .msg-meta {
             font-size: 10px;
             color: #7a7a7a;
@@ -455,11 +482,14 @@
 
         <div class="main-content">
             <div class="header">
-                <div class="profile-img">★</div>
-                <div class="room-info">
-                    <div class="room-title" id="room-title">To Do List</div>
-                    <div class="room-count" id="todo-count">남은 할 일: 0개</div>
+                <div class="header-left">
+                    <div class="profile-img">★</div>
+                    <div class="room-info">
+                        <div class="room-title" id="room-title">To Do List</div>
+                        <div class="room-count" id="todo-count">남은 할 일: 0개</div>
+                    </div>
                 </div>
+                <button class="reset-btn" onclick="resetApp()" title="전체 초기화">🔄</button>
             </div>
 
             <div class="content-panel active" id="panel-todo">
@@ -530,6 +560,34 @@
 
             updateCount();
         };
+
+        // 전체 초기화 (재시작 기능) 함수 추가
+        function resetApp() {
+            const confirmReset = confirm("정말 모든 데이터를 초기화하고 처음부터 다시 시작하시겠습니까?\n(작성하신 투두, 메모, 대화 내용이 모두 사라집니다!)");
+            if (confirmReset) {
+                // 저장 데이터 전체 삭제
+                localStorage.clear();
+                
+                // 데이터 변수 비우기
+                nickname = '';
+                todos = [];
+                talks = [];
+                
+                // UI 원상 복구
+                document.getElementById('memo-textarea').value = '';
+                document.getElementById('nickname-input').value = '';
+                document.getElementById('edit-nickname-input').value = '';
+                renderTodos();
+                renderTalks();
+                updateCount();
+                
+                // 첫 로그인 탭으로 전환 및 오버레이 열기
+                switchTab('todo', document.querySelectorAll('.index-btn')[0]);
+                document.getElementById('login-overlay').style.display = 'flex';
+                
+                alert("성공적으로 초기화되었습니다! 처음부터 다시 시작합니다. ✨");
+            }
+        }
 
         // 최초 닉네임 등록
         function startApp() {
