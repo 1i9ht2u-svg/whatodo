@@ -57,7 +57,7 @@
             border: none;
             background: none;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             color: #7a7a7a;
             cursor: pointer;
@@ -267,6 +267,51 @@
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
         }
 
+        /* [추가] 닉네임 편집 세팅 설정창 디자인 */
+        .settings-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            padding: 25px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            color: #5c5c5c;
+            font-weight: bold;
+        }
+
+        .settings-input {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 0 15px;
+            font-size: 14px;
+            outline: none;
+            text-align: center;
+        }
+
+        .settings-btn {
+            width: 100%;
+            height: 42px;
+            background-color: #ff8da1;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .settings-btn:hover {
+            background-color: #ff6b8b;
+        }
+
         /* 하단 입력창 영역 */
         .input-area {
             background-color: #ffffff;
@@ -308,7 +353,7 @@
             background-color: #8e8e8e;
         }
 
-        /* 닉네임 입력 모달 팝업 창 */
+        /* 닉네임 최초 입력 모달 팝업 창 */
         .login-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -396,6 +441,9 @@
             <button class="index-btn" onclick="switchTab('talk', this)">
                 <span class="icon">💬</span><span>Talk</span>
             </button>
+            <button class="index-btn" onclick="switchTab('settings', this)">
+                <span class="icon">⚙️</span><span>설정</span>
+            </button>
         </div>
 
         <div class="main-content">
@@ -411,20 +459,30 @@
                 <div class="date-divider">
                     <span class="date-text" id="current-date">2026년 05월 29일</span>
                 </div>
+                <div id="todo-list-container"></div>
             </div>
 
             <div class="content-panel" id="panel-memo" style="padding: 15px;">
-                <textarea class="memo-textarea" placeholder="여기에 자유롭게 메모를 남겨보세요... (자동으로 저장되지 않으니 참고해 주세요!)"></textarea>
+                <textarea class="memo-textarea" id="memo-textarea" placeholder="메모를 남겨보세요" oninput="saveMemo()"></textarea>
             </div>
 
             <div class="content-panel" id="panel-talk">
                 <div class="date-divider">
-                    <span class="date-text">심심할 때 대화해요</span>
+                    <span class="date-text">심심할 때 대화를 걸어보세요!</span>
+                </div>
+                <div id="talk-list-container"></div>
+            </div>
+
+            <div class="content-panel" id="panel-settings" style="padding: 20px;">
+                <div class="settings-card">
+                    <div class="settings-label">⚙️ 닉네임 수정하기</div>
+                    <input type="text" class="settings-input" id="edit-nickname-input" placeholder="새로운 닉네임 입력">
+                    <button class="settings-btn" onclick="updateNickname()">변경 완료 및 저장</button>
                 </div>
             </div>
 
             <div class="input-area" id="input-area">
-                <input type="text" class="todo-input" id="todo-input" placeholder="할 일을 입력하고 전송을 눌러주세요..." onkeypress="handleKeyPress(event)">
+                <input type="text" class="todo-input" id="todo-input" placeholder="할 일을 입력하고 전송을 눌러주세요" onkeypress="handleKeyPress(event)">
                 <button class="send-btn" id="send-btn" onclick="handleSend()">★</button>
             </div>
         </div>
@@ -433,8 +491,40 @@
     <script>
         let currentTab = 'todo';
         let nickname = '';
+        let todos = [];
+        let talks = [];
 
-        // 닉네임 입력 완료 후 앱 시작
+        // 앱 구동 시 데이터 로드
+        window.onload = function() {
+            const savedNickname = localStorage.getItem('wt_nickname');
+            if (savedNickname) {
+                nickname = savedNickname;
+                document.getElementById('room-title').innerText = `${nickname}의 to do list`;
+                document.getElementById('edit-nickname-input').value = nickname; // 설정 창에도 미리 닉네임 채워두기
+                document.getElementById('login-overlay').style.display = 'none';
+            }
+
+            const savedMemo = localStorage.getItem('wt_memo');
+            if (savedMemo) {
+                document.getElementById('memo-textarea').value = savedMemo;
+            }
+
+            const savedTodos = localStorage.getItem('wt_todos');
+            if (savedTodos) {
+                todos = JSON.parse(savedTodos);
+                renderTodos();
+            }
+
+            const savedTalks = localStorage.getItem('wt_talks');
+            if (savedTalks) {
+                talks = JSON.parse(savedTalks);
+                renderTalks();
+            }
+
+            updateCount();
+        };
+
+        // 최초 닉네임 등록
         function startApp() {
             const nickInput = document.getElementById('nickname-input');
             nickname = nickInput.value.trim();
@@ -443,10 +533,35 @@
                 return;
             }
             
-            // 헤더 제목 변경
+            localStorage.setItem('wt_nickname', nickname);
             document.getElementById('room-title').innerText = `${nickname}의 to do list`;
-            // 모달창 숨기기
+            document.getElementById('edit-nickname-input').value = nickname; // 세팅란 연동
             document.getElementById('login-overlay').style.display = 'none';
+        }
+
+        // [추가] 언제든지 설정 탭에서 새로운 닉네임으로 교체하는 기능
+        function updateNickname() {
+            const editInput = document.getElementById('edit-nickname-input');
+            const newName = editInput.value.trim();
+
+            if (newName === '') {
+                alert('변경할 닉네임을 입력해 주세요!');
+                return;
+            }
+
+            nickname = newName;
+            localStorage.setItem('wt_nickname', nickname); // 보관함 갱신
+            document.getElementById('room-title').innerText = `${nickname}의 to do list`; // 상단 헤더 갱신
+            alert('닉네임이 성공적으로 변경되었습니다! ✨');
+            
+            // 변경 후 자연스럽게 투두 탭으로 복귀 처리
+            switchTab('todo', document.querySelectorAll('.index-btn')[0]);
+        }
+
+        // 메모 실시간 저장
+        function saveMemo() {
+            const memoText = document.getElementById('memo-textarea').value;
+            localStorage.setItem('wt_memo', memoText);
         }
 
         // 오늘 날짜 표시
@@ -455,35 +570,32 @@
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' };
         dateText.innerText = now.toLocaleDateString('ko-KR', options);
 
-        // 탭 전환 함수
+        // 탭 전환 시스템
         function switchTab(tabName, button) {
             currentTab = tabName;
             
-            // 모든 버튼 비활성화 및 클릭된 버튼 활성화
             document.querySelectorAll('.index-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
 
-            // 모든 패널 숨기고 해당 패널 노출
             document.querySelectorAll('.content-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(`panel-${tabName}`).classList.add('active');
 
-            // 탭 상태에 따라 하단 입력창 플레이스홀더 및 구성 변경
             const inputArea = document.getElementById('input-area');
             const inputField = document.getElementById('todo-input');
             
-            if (tabName === 'memo') {
+            // 메모나 설정 탭에서는 하단 채팅 입력바가 필요 없으므로 숨김
+            if (tabName === 'memo' || tabName === 'settings') {
                 inputArea.style.display = 'none';
             } else {
                 inputArea.style.display = 'flex';
                 if (tabName === 'todo') {
-                    inputField.placeholder = "할 일을 입력하고 전송을 눌러주세요...";
+                    inputField.placeholder = "할 일을 입력하고 전송을 눌러주세요";
                 } else if (tabName === 'talk') {
-                    inputField.placeholder = "말을 걸어보세요...";
+                    inputField.placeholder = "심심할 때 말을 걸어보세요!";
                 }
             }
         }
 
-        // 전송 버튼 클릭 공통 처리
         function handleSend() {
             if (currentTab === 'todo') {
                 addTodo();
@@ -492,84 +604,119 @@
             }
         }
 
-        // 엔터키 입력 처리
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 handleSend();
             }
         }
 
-        // 현재 시간 반환 유틸함수
         function getTimeString() {
             return new Date().toLocaleTimeString('ko-KR', {
                 hour: '2-digit', minute: '2-digit', hour12: true
             });
         }
 
-        // To-Do 추가 기능 (하트 기호 탑재)
+        function renderTodos() {
+            const container = document.getElementById('todo-list-container');
+            container.innerHTML = '';
+
+            todos.forEach((todo, index) => {
+                const todoItem = document.createElement('div');
+                todoItem.classList.add('msg-item');
+                if (todo.completed) todoItem.classList.add('completed');
+
+                todoItem.innerHTML = `
+                    <div class="msg-bubble">
+                        <button class="heart-btn" onclick="toggleHeart(${index})">${todo.completed ? '♥' : '♡'}</button>
+                        <span class="todo-text">${todo.text}</span>
+                        <button class="delete-btn" onclick="deleteItem(${index})">×</button>
+                    </div>
+                    <div class="msg-meta">${todo.time}</div>
+                `;
+                container.appendChild(todoItem);
+            });
+        }
+
         function addTodo() {
             const input = document.getElementById('todo-input');
-            const panel = document.getElementById('panel-todo');
             const text = input.value.trim();
 
             if (text === '') return;
 
-            const todoItem = document.createElement('div');
-            todoItem.classList.add('msg-item');
+            const newTodo = {
+                text: text,
+                completed: false,
+                time: getTimeString()
+            };
 
-            todoItem.innerHTML = `
-                <div class="msg-bubble">
-                    <button class="heart-btn" onclick="toggleHeart(this)">♡</button>
-                    <span class="todo-text">${text}</span>
-                    <button class="delete-btn" onclick="deleteItem(event, this)">×</button>
-                </div>
-                <div class="msg-meta">${getTimeString()}</div>
-            `;
+            todos.push(newTodo);
+            localStorage.setItem('wt_todos', JSON.stringify(todos));
 
-            panel.appendChild(todoItem);
+            renderTodos();
             input.value = '';
+            
+            const panel = document.getElementById('panel-todo');
             panel.scrollTop = panel.scrollHeight;
             updateCount();
         }
 
-        // 하트 클릭 시 토글 기능
-        function toggleHeart(btnElement) {
-            const item = btnElement.closest('.msg-item');
-            item.classList.toggle('completed');
-            
-            if(item.classList.contains('completed')) {
-                btnElement.innerText = '♥';
-            } else {
-                btnElement.innerText = '♡';
-            }
+        function toggleHeart(index) {
+            todos[index].completed = !todos[index].completed;
+            localStorage.setItem('wt_todos', JSON.stringify(todos));
+            renderTodos();
             updateCount();
         }
 
-        // Talk 메시지 전송 및 랜덤 답변 출력
+        function deleteItem(index) {
+            todos.splice(index, 1);
+            localStorage.setItem('wt_todos', JSON.stringify(todos));
+            renderTodos();
+            updateCount();
+        }
+
+        function renderTalks() {
+            const container = document.getElementById('talk-list-container');
+            container.innerHTML = '';
+
+            talks.forEach(talk => {
+                const item = document.createElement('div');
+                item.classList.add('msg-item');
+                if (talk.type === 'my') {
+                    item.classList.add('my-msg');
+                    item.innerHTML = `
+                        <div class="msg-meta">${talk.time}</div>
+                        <div class="msg-bubble">${talk.text}</div>
+                    `;
+                } else {
+                    item.innerHTML = `
+                        <div class="msg-bubble">${talk.text}</div>
+                        <div class="msg-meta">${talk.time}</div>
+                    `;
+                }
+                container.appendChild(item);
+            });
+        }
+
         function sendTalkMessage() {
             const input = document.getElementById('todo-input');
-            const panel = document.getElementById('panel-talk');
             const text = input.value.trim();
 
             if (text === '') return;
 
-            // 1. 내가 보낸 메시지 화면에 추가
-            const myItem = document.createElement('div');
-            myItem.classList.add('msg-item', 'my-msg');
-            myItem.innerHTML = `
-                <div class="msg-meta">${getTimeString()}</div>
-                <div class="msg-bubble">${text}</div>
-            `;
-            panel.appendChild(myItem);
+            const timeStr = getTimeString();
+
+            talks.push({ type: 'my', text: text, time: timeStr });
+            localStorage.setItem('wt_talks', JSON.stringify(talks));
+            renderTalks();
             input.value = '';
+            
+            const panel = document.getElementById('panel-talk');
             panel.scrollTop = panel.scrollHeight;
 
-            // 2. 챗봇의 랜덤 답변 생성
             setTimeout(() => {
                 const replies = [
                     '자외선 차단제 바르는 거 잊지 마!',
                     '나 그냥 있오..',
-                    '머해??',
                     '보고 시퍼',
                     '힘 내!! 아자아자',
                     '무리하지 마..',
@@ -579,35 +726,24 @@
                     '그러쿠나',
                     '잘 잤어?',
                     '푹 잘 잤으면 좋겠어'
+                    '머해??',
+                    '헤헤',
+                    '나도나도'
                 ];
                 const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                const botTimeStr = getTimeString();
 
-                const botItem = document.createElement('div');
-                botItem.classList.add('msg-item');
-                botItem.innerHTML = `
-                    <div class="msg-bubble">${randomReply}</div>
-                    <div class="msg-meta">${getTimeString()}</div>
-                `;
-                panel.appendChild(botItem);
+                talks.push({ type: 'bot', text: randomReply, time: botTimeStr });
+                localStorage.setItem('wt_talks', JSON.stringify(talks));
+                
+                renderTalks();
                 panel.scrollTop = panel.scrollHeight;
             }, 500);
         }
 
-        // 리스트 아이템 삭제
-        function deleteItem(event, buttonElement) {
-            event.stopPropagation();
-            const item = buttonElement.closest('.msg-item');
-            item.style.opacity = '0';
-            setTimeout(() => {
-                item.remove();
-                updateCount();
-            }, 200);
-        }
-
-        // 남은 할 일 개수 업데이트
         function updateCount() {
-            const totalItems = document.querySelectorAll('#panel-todo .msg-item').length;
-            const completedItems = document.querySelectorAll('#panel-todo .msg-item.completed').length;
+            const totalItems = todos.length;
+            const completedItems = todos.filter(t => t.completed).length;
             const remaining = totalItems - completedItems;
             
             document.getElementById('todo-count').innerText = `남은 할 일: ${remaining}개`;
